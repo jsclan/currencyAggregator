@@ -1,0 +1,27 @@
+const _c = {
+             "db": {
+               "mongo": {
+                 "host": "192.168.88.70",
+                 "port": 27017,
+                 "authDb": "admin",
+                 "authMechanism": "MONGODB-CR",
+                 "user": "crm-admin",
+                 "pass": "7hRaZl",
+                 "db": "currency"
+               }
+             },
+             "tcp": {
+               "socket": {
+                 "host": "192.168.88.70",
+                 "port": 5001
+               },
+               "http": {
+                 "host": "192.168.88.70",
+                 "port": 5000,
+                 "auth-keys": [
+                   "a76014c5-b9a6-4938-89d3-40f904eef84a"
+                 ]
+               }
+             }
+           };
+module.exports = _c;

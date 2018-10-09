@@ -1,4 +1,5 @@
 node_modules/
+core/constants/*
 .DS_Store
 /.idea
 npm-debug.log

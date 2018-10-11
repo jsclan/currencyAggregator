@@ -1,6 +1,12 @@
 /**
  * Created by G on 03.10.2018.
  */
+
+const moment = require('moment');
+
+const timeNow = function(){
+  return moment().utc().format('YYYY-MM-DD hh:mm:ss');
+};
 const https = require('https');
 const TARGET_ENDPOINT = 'https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5';
 
@@ -31,7 +37,8 @@ class privatbankDriver {
               source: 'PRIVATBANK',
               currency: currencyItem.ccy.toUpperCase(),
               ask: parseFloat(currencyItem.buy),
-              bid: parseFloat(currencyItem.sale)
+              bid: parseFloat(currencyItem.sale),
+              date: timeNow()
             }, (err, result) => {
               addedIndex++;
               if ( addedIndex > 0 && addedIndex == totalItems ) {

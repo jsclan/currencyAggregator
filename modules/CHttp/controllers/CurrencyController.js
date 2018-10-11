@@ -23,8 +23,8 @@ const prepareAVGResponseBody = (currencies, type) => {
   }
   for ( let currency in tmp ) {
     responseBody[currency] = {
-      ask: tmp[currency].ask / tmp[currency].total,
-      bid: tmp[currency].bid / tmp[currency].total
+      ask: (tmp[currency].ask / tmp[currency].total).toFixed(4),
+      bid: (tmp[currency].bid / tmp[currency].total).toFixed(4)
     }
   }
 
@@ -33,7 +33,35 @@ const prepareAVGResponseBody = (currencies, type) => {
 exports.todayAction = function(req, res) {
   const CurrencyStoreModel = new CurrencyStore;
   const currency = (req.params.hasOwnProperty('currency')) ? req.params.currency : null;
-  CurrencyStoreModel.getAllByCurrency(currency).then((currencies) => {
+  CurrencyStoreModel.getAllByCurrency(currency, null).then((currencies) => {
+    const { responseBody, total } = prepareAVGResponseBody(currencies, TYPE_AVG);
+
+    CHttpHelper.success(200).body({
+      data: responseBody,
+      total: total
+    }).applyTo(res);
+  }).catch((err) => {
+    CHttpHelper.error(err, 500).applyTo(res);
+  });
+};
+exports.periodAction = function(req, res) {
+  const CurrencyStoreModel = new CurrencyStore;
+  const currency = (req.params.hasOwnProperty('currency')) ? req.params.currency : null;
+
+  const date = (req.params.hasOwnProperty('date')) ? req.params.date : null;
+
+  const dateFrom = (req.params.hasOwnProperty('dateFrom')) ? req.params.dateFrom : null;
+  const dateTo = (req.params.hasOwnProperty('dateTo')) ? req.params.dateTo : null;
+
+  let dateFilter = null;
+  if ( dateFrom && dateTo ) {
+    dateFilter = { dateFrom, dateTo };
+  }
+  if ( date) {
+    dateFilter = date;
+  }
+
+  CurrencyStoreModel.getAllByCurrency(currency, dateFilter).then((currencies) => {
     const { responseBody, total } = prepareAVGResponseBody(currencies, TYPE_AVG);
 
     CHttpHelper.success(200).body({

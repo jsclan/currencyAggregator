@@ -1,6 +1,14 @@
 /**
  * Created by G on 18.07.2017.
  */
+const moment = require('moment');
+
+const timeInterval = function(){
+  const dateFrom = moment().utc().startOf('day').format('YYYY-MM-DD 00:00:00');
+  const dateTo = moment().utc().endOf('day').format('YYYY-MM-DD 23:59:59');
+  return { dateFrom, dateTo };
+};
+
 exports.CurrencyStore = function(){
     this.collection = 'CurrencyStore';
     this.mongo = global.core.db.mongo;
@@ -17,7 +25,7 @@ exports.CurrencyStore.prototype.__construct = function(){
     currency: String,
     ask: Number,
     bid: Number,
-    date: Number
+    date: String
   }), self.collection);
 };
 exports.CurrencyStore.prototype.getAll = function(){
@@ -33,11 +41,27 @@ exports.CurrencyStore.prototype.getAll = function(){
     });
   })
 };
-exports.CurrencyStore.prototype.getAllByCurrency = function(currency = null){
+exports.CurrencyStore.prototype.getAllByCurrency = function(currency = null, dateFilter = null){
   const self = this;
   const CurrencyStore = self.model;
   return new Promise((resolve, reject) => {
-    const filter = {};
+    const { dateFrom, dateTo } = timeInterval();
+    const filter = {
+      date: {
+        '$gte': dateFrom,
+        '$lte': dateTo
+      }
+    };
+    if ( dateFilter !== null ) {
+      if (typeof dateFilter === 'object') {
+        filter.date['$gte'] = moment(dateFilter.dateFrom).format('YYYY-MM-DD 00:00:00');
+        filter.date['$lte'] = moment(dateFilter.dateTo).format('YYYY-MM-DD 23:59:59');
+      }
+      if (typeof dateFilter === 'string') {
+        filter.date['$gte'] = moment(dateFilter).format('YYYY-MM-DD 00:00:00');
+        filter.date['$lte'] = moment(dateFilter).format('YYYY-MM-DD 23:59:59');
+      }
+    }
     if ( currency ) {
         filter['currency'] = currency.toUpperCase();
     }

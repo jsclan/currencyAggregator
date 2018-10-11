@@ -1,19 +1,53 @@
 /**
  * Created by G on 17.08.2017.
  */
+const authAttempts = {};
+let tick = 0;
+setInterval(function(){
+  tick += 100;
+}, 100);
+const quotaCheck = function(authKey){
+  const authKeys = global.core.config.tcp.http['auth-keys'];
+  if ( authAttempts.hasOwnProperty(authKey)) {
+    if ( authKeys[authKey].quota !== null ) {
+      if ( authAttempts[authKey].attempts === authKeys[authKey].quota.attempts ) {
+        return false;
+      }
+      if ( (tick - authAttempts[authKey].tick) > authKeys[authKey].quota.delay ) {
+        authAttempts[authKey].tick = tick;
+        authAttempts[authKey].attempts++;
+        return true;
+      }
+    } else {
+      return true;
+    }
+  } else {
+    authAttempts[authKey] = {
+      tick,
+      attempts: 1
+    };
+    return true;
+  }
+  return false;
+}
 exports.checkAccessorApi = function(req, res, next) {
 
     const CHttpHelper = require(global.CHTTP_DIR + '/helpers/CHttpHelper').CHttpHelper;
     const authKeys = global.core.config.tcp.http['auth-keys'];
 
     if (req.headers.hasOwnProperty('auth-key')) {
-        if (authKeys.indexOf(req.headers['auth-key'].toLowerCase()) >= 0) {
+        const authKey = req.headers['auth-key'].toLowerCase();
+        if (authKeys.hasOwnProperty(authKey)) {
+          if ( quotaCheck(authKey) ) {
             next();
+          } else {
+            CHttpHelper.error('Quota exceeded', 401).applyTo(res);
+          }
         } else {
-            CHttpHelper.error('Authorisation required', 401).applyTo(res);
+            CHttpHelper.error('Authorization required', 401).applyTo(res);
         }
     } else {
-        CHttpHelper.error('Authorisation required3', 401).applyTo(res);
+        CHttpHelper.error('Authorization required', 401).applyTo(res);
     }
 };
 

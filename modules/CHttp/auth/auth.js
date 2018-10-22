@@ -1,29 +1,40 @@
 /**
  * Created by G on 17.08.2017.
  */
-const authAttempts = {};
-let tick = 0;
+const moment = require('moment');
+const authAttempts = {
+  clients: {},
+  tick: 0
+};
 setInterval(function(){
-  tick += 100;
+  let utcDate = moment.utc();
+  let nowTime = utcDate.format('HHmmss');
+  if ( parseInt(nowTime) == 235959 ) {
+    authAttempts.clients = {};
+    authAttempts.tick = 0
+  }
+}, 1000);
+setInterval(function(){
+  authAttempts.tick += 100;
 }, 100);
 const quotaCheck = function(authKey){
   const authKeys = global.core.config.tcp.http['auth-keys'];
-  if ( authAttempts.hasOwnProperty(authKey)) {
+  if ( authAttempts.clients.hasOwnProperty(authKey)) {
     if ( authKeys[authKey].quota !== null ) {
-      if ( authAttempts[authKey].attempts === authKeys[authKey].quota.attempts ) {
+      if ( authAttempts.clients[authKey].attempts === authKeys[authKey].quota.attempts ) {
         return false;
       }
-      if ( (tick - authAttempts[authKey].tick) > authKeys[authKey].quota.delay ) {
-        authAttempts[authKey].tick = tick;
-        authAttempts[authKey].attempts++;
+      if ( (authAttempts.tick - authAttempts.clients[authKey].tick) > authKeys[authKey].quota.delay ) {
+        authAttempts.clients[authKey].tick = authAttempts.tick;
+        authAttempts.clients[authKey].attempts++;
         return true;
       }
     } else {
       return true;
     }
   } else {
-    authAttempts[authKey] = {
-      tick,
+    authAttempts.clients[authKey] = {
+      tick: authAttempts.tick,
       attempts: 1
     };
     return true;
